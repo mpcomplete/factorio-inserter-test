@@ -17,9 +17,13 @@ class Point:
   def toStr(self):
     return '"x": %s, "y": %s' % (self.x, self.y)
   def __add__(self, other):
-      return Point(self.x + other.x, self.y + other.y)
+    return Point(self.x + other.x, self.y + other.y)
   def __sub__(self, other):
-      return Point(self.x - other.x, self.y - other.y)
+    return Point(self.x - other.x, self.y - other.y)
+  def __eq__(self, other):
+    return self.x == other.x and self.y == other.y
+  def __ne__(self, other):
+    return not (self == other)
 
 
 class Entity:
@@ -47,26 +51,27 @@ class Chunk:
     self.connectedChunks = []
 
   def substitute(self):
-    return Chunk.template.substitute(
-      nixieLeading = self._getNixieStr(),
-      nid = self.n.id,
-      npos = self.n.pos.toStr(),
-      eid = self.e.id,
-      epos = self.e.pos.toStr(),
-      c1id = self.c1.id,
-      c1pos = self.c1.pos.toStr(),
-      c2id = self.c2.id,
-      c2pos = self.c2.pos.toStr(),
-      iid = self.i.id,
-      ipos = self.i.pos.toStr(),
-      ipickup = self._getPickup().toStr(),
-      idrop = self._getDrop().toStr(),
-      pid = self.p.id,
-      ppos = self.p.pos.toStr(),
-      did = self.d.id,
-      dpos = self.d.pos.toStr(),
-      chunkConnections = self._getChunkConnectionsStr()
-    )
+    template = Chunk.template if self._isValid() else Chunk.emptyTemplate
+    return template.substitute(
+        nixieLeading = self._getNixieStr(),
+        nid = self.n.id,
+        npos = self.n.pos.toStr(),
+        eid = self.e.id,
+        epos = self.e.pos.toStr(),
+        c1id = self.c1.id,
+        c1pos = self.c1.pos.toStr(),
+        c2id = self.c2.id,
+        c2pos = self.c2.pos.toStr(),
+        iid = self.i.id,
+        ipos = self.i.pos.toStr(),
+        ipickup = self._getPickup().toStr(),
+        idrop = self._getDrop().toStr(),
+        pid = self.p.id,
+        ppos = self.p.pos.toStr(),
+        did = self.d.id,
+        dpos = self.d.pos.toStr(),
+        chunkConnections = self._getChunkConnectionsStr()
+      )
 
   def moveChests(self, pickupPos, dropPos, dropOffset):
     """Positions are relative to inserter."""
@@ -107,6 +112,15 @@ class Chunk:
                             }""")
     connections = [template.substitute(id = chunk.c1.id) for chunk in self.connectedChunks]
     return ",\n" + string.join(connections, ",")
+
+  def _isValid(self):
+    if self.d.pos == self.p.pos:
+      return False
+    if self.i.pos == self.d.pos:
+      return False
+    if self.i.pos == self.p.pos:
+      return False
+    return True
 
 
 def calcDropOffset(x, y):
@@ -158,7 +172,7 @@ class Full:
           tiles.append(template.substitute(
             x = x + chunk.pos.x,
             y = y + chunk.pos.y,
-            kind = "hazard-concrete-left" if y < 2 else "concrete" 
+            kind = "hazard-concrete-left" if (y < 2 or not chunk._isValid()) else "concrete" 
           ))
     return string.join(tiles, ",")
 
@@ -172,6 +186,8 @@ class Full:
 
 with open("chunk-template.json", "r") as f:
   Chunk.template = string.Template(f.read())
+with open("chunk-empty-template.json", "r") as f:
+  Chunk.emptyTemplate = string.Template(f.read())
 with open("full-template.json", "r") as f:
   Full.template = string.Template(f.read())
 

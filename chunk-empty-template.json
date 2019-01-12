@@ -1,0 +1,26 @@
+            {
+                "position": {
+                    $epos
+                }, 
+                "entity_number": $eid, 
+                "name": "medium-electric-pole-4"
+            }, 
+            {
+                "entity_number": $c1id, 
+                "name": "decider-combinator", 
+                "direction": 2, 
+                "connections": {
+                    "1": {
+                        "green": [
+                            {
+                              "circuit_id": 2,
+                              "entity_id": $c1id
+                            }
+                            $chunkConnections
+                        ]
+                    }
+                },
+                "position": {
+                    $c1pos
+                }
+            }
