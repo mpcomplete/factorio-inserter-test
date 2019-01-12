@@ -139,7 +139,7 @@ def calcDropOffset(p):
   """x, y range [-1, 1]."""
   return Point(p.x*.2, p.y*.2)
 
-def getDropOffset(row, col):
+def getFastestDropOffset(row, col):
   global dropOffset
   global fastestOffsetForPos
 
@@ -154,8 +154,6 @@ class Full:
     self.chunks = []
 
   def genChunks(self):
-    global dropOffset
-
     chunkMap = {}
     for row in range(7*7):
       chunkMap[row] = {}
@@ -164,16 +162,7 @@ class Full:
         px = row % 7
         dy = col / 7
         dx = col % 7
-        chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
-        chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), getDropOffset(row, col))
-        if row > 0:
-          # Connect to above chunk
-          chunk.connectTo(chunkMap[row-1][col])
-        if row == 0 and col > 0:
-          # Connect to left chunk
-          chunk.connectTo(chunkMap[row][col-1])
-
-        chunkMap[row][col] = chunk
+        Full._addChunkToMap(chunkMap, row, col, px, py, dx, dy, getFastestDropOffset(row, col))
     self.chunks = [chunk for chunkRow in chunkMap.values() for chunk in chunkRow.values()]
 
   def genAllFasterThan(self):
@@ -186,23 +175,26 @@ class Full:
       px = resultRow % 7
       dy = resultCol / 7
       dx = resultCol % 7
+      Full._addChunkToMap(chunkMap, row, col, px, py, dx, dy, calcDropOffset(each.offset))
+      col += 1
+      if col > 7*7:
+        col = 0
+        row += 1
+        chunkMap[row] = {}
 
+    self.chunks = [chunk for chunkRow in chunkMap.values() for chunk in chunkRow.values()]
+
+  @staticmethod
+  def _addChunkToMap(chunkMap, row, col, px, py, dx, dy, dropOffset):
       chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
-      chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), calcDropOffset(each.offset))
+      chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), dropOffset)
       if row > 0:
         # Connect to above chunk
         chunk.connectTo(chunkMap[row-1][col])
       if row == 0 and col > 0:
         # Connect to left chunk
         chunk.connectTo(chunkMap[row][col-1])
-
       chunkMap[row][col] = chunk
-      col += 1
-      if col > 7*7:
-        col = 0
-        row += 1
-        chunkMap[row] = {}
-    self.chunks = [chunk for chunkRow in chunkMap.values() for chunk in chunkRow.values()]
 
   def getTilesStr(self):
     template = string.Template("""
