@@ -150,6 +150,9 @@ def getFastestDropOffset(row, col):
 
 class Full:
   """All the chunks together."""
+
+  maxChunksPerRow = 7*7
+
   def __init__(self):
     self.chunks = []
 
@@ -167,20 +170,29 @@ class Full:
 
   def genAllFasterThan(self):
     global fasterThanNResults
-    row, col = 0, 0
+    candidates = []
+    for result in fasterThanNResults:
+      resultRow, resultCol = result.pos[0], result.pos[1]
+      candidates.append(Object(
+        p = Point(resultRow / 7, resultRow % 7),
+        d = Point(resultCol / 7, resultCol % 7),
+        offset = calcDropOffset(result.offset)
+      ))
+
+    # Sort candidates according to pickup/dropoff locations. Tuple sort is lexicographic - pickup.y sorted first.
+    candidates.sort(key = lambda c: (c.p.y, c.p.x, c.d.y, c.d.x))
+
+    lastPickup = candidates[0].p
     chunkMap = {0: {}}
-    for each in fasterThanNResults:
-      resultRow, resultCol = each.pos[0], each.pos[1]
-      py = resultRow / 7
-      px = resultRow % 7
-      dy = resultCol / 7
-      dx = resultCol % 7
-      Full._addChunkToMap(chunkMap, row, col, px, py, dx, dy, calcDropOffset(each.offset))
-      col += 1
-      if col > 7*7:
+    row, col = 0, 0
+    for candidate in candidates:
+      if lastPickup.y != candidate.p.y or col > Full.maxChunksPerRow:
         col = 0
         row += 1
         chunkMap[row] = {}
+      lastPickup = candidate.p
+      Full._addChunkToMap(chunkMap, row, col, candidate.p.x, candidate.p.y, candidate.d.x, candidate.d.y, candidate.offset)
+      col += 1
 
     self.chunks = [chunk for chunkRow in chunkMap.values() for chunk in chunkRow.values()]
 
@@ -188,10 +200,10 @@ class Full:
   def _addChunkToMap(chunkMap, row, col, px, py, dx, dy, dropOffset):
       chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
       chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), dropOffset)
-      if row > 0:
+      if row > 0 and col in chunkMap[row-1]:
         # Connect to above chunk
         chunk.connectTo(chunkMap[row-1][col])
-      if row == 0 and col > 0:
+      if col > 0:
         # Connect to left chunk
         chunk.connectTo(chunkMap[row][col-1])
       chunkMap[row][col] = chunk
@@ -277,8 +289,8 @@ def main():
     sys.stderr.write("Using offset=%d,%d\n" % (dropOffset.x, dropOffset.y))
 
   f = Full()
-  f.genChunks()
-#  f.genAllFasterThan()
+#  f.genChunks()
+  f.genAllFasterThan()
   print(f.substitute())
 
 if __name__ == "__main__":
