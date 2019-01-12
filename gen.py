@@ -120,6 +120,8 @@ class Full:
     self.chunks = []
 
   def genChunks(self):
+    global dropOffset
+
     row, col = 0, 0
     for py in range(7):
       for px in range(7):
@@ -128,7 +130,7 @@ class Full:
             row = py*7 + px
             col = dy*7 + dx
             chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
-            chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), calcDropOffset(0, 0))
+            chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), calcDropOffset(dropOffset.x, dropOffset.y))
             if row > 0:
               # Connect to above chunk
               chunk.connectTo(self.chunks[(row-1)*7*7 + col])
@@ -172,6 +174,11 @@ with open("chunk-template.json", "r") as f:
   Chunk.template = string.Template(f.read())
 with open("full-template.json", "r") as f:
   Full.template = string.Template(f.read())
+
+dropOffset = Point(int(sys.argv[1]), int(sys.argv[2]))
+assert(-1 <= dropOffset.x <= 1)
+assert(-1 <= dropOffset.y <= 1)
+sys.stderr.write("Using offset=%d,%d\n" % (dropOffset.x, dropOffset.y))
 
 f = Full()
 f.genChunks()

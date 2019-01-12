@@ -6,33 +6,46 @@ import zlib
 import base64
 import json
 
-bpString = sys.stdin.read()
-bpCompressed = base64.b64decode(bpString[1:])
-bpJsonStr = zlib.decompress(bpCompressed)
-bpJson = json.loads(bpJsonStr)
+def analyzeFile(f):
+  bpString = f.read()
+  bpCompressed = base64.b64decode(bpString[1:])
+  bpJsonStr = zlib.decompress(bpCompressed)
+  bpJson = json.loads(bpJsonStr)
 
-entities = bpJson["blueprint"]["entities"]
-results = []
-for e in entities:
-  if e["name"] != "SNTD-nixie-tube-small" or "control_behavior" not in e:
-      continue
-  result = int(e["control_behavior"]["circuit_condition"]["constant"])
-  y = int(e["position"]["y"])
-  x = int(e["position"]["x"])
-  results.append((y, x, result))
+  entities = bpJson["blueprint"]["entities"]
+  results = []
+  for e in entities:
+    if e["name"] == "express-stack-inserter" and "drop_position" in e:
+      dropX = float(e["drop_position"]["x"])
+      dropY = float(e["drop_position"]["y"])
+      # Normalize to (-1,-1), (1,1)
+      offsetX = int(5*(dropX - round(dropX)))
+      offsetY = int(5*(dropY - round(dropY)))
+    if e["name"] == "SNTD-nixie-tube-small" and "control_behavior" in e:
+      result = int(e["control_behavior"]["circuit_condition"]["constant"])
+      y = int(e["position"]["y"])
+      x = int(e["position"]["x"])
+      results.append((y, x, result))
 
-# Sort by y, with x breaking ties. sorted() is stable.
-results = sorted(results, key = lambda r: r[1])
-xmin = results[0][1]
-results = sorted(results, key = lambda r: r[0])
-ymin = results[0][0]
+  # Sort by y, with x breaking ties. sorted() is stable.
+  results = sorted(results, key = lambda r: r[1])
+  xmin = results[0][1]
+  results = sorted(results, key = lambda r: r[0])
+  ymin = results[0][0]
 
-# Normalize top left to (0,0).
-results = [(r[0] - ymin, r[1] - xmin, r[2]) for r in results]
+  # Normalize top left to (0,0).
+  results = [(r[0] - ymin, r[1] - xmin, r[2]) for r in results]
 
-# Convert y,x to row,col
-width = 8
-height = 10
-results = [(r[0]/height, r[1]/width, r[2]) for r in results]
-for r in sorted(results, key = lambda r: r[2]):
-    print(r)
+  # Convert y,x to row,col
+  width = 8
+  height = 10
+  results = [(r[0]/height, r[1]/width, r[2]) for r in results]
+  return (offsetX, offsetY, results)
+
+resultSets = []
+
+for each in sys.argv[1:]:
+  with open(each, "r") as f:
+    results = analyzeFile(f)
+    resultSets.append(results)
+    print(each, results[0:2])
