@@ -93,7 +93,7 @@ class Chunk:
                 "entity_number": $id, 
                 "name": "SNTD-nixie-tube-small"
             }""")
-    nixies = [template.substitute(x = self.pos.x + x, y = self.pos.y + 0, id = genId()) for x in range(5)]
+    nixies = [template.substitute(x = self.pos.x + x, y = self.pos.y + 0, id = genId()) for x in range(4,5)]
     return string.join(nixies, ",")
 
   def _getChunkConnectionsStr(self):
@@ -163,6 +163,7 @@ class Full:
   def substitute(self):
     chunkStrs = [chunk.substitute() for chunk in self.chunks]
     return Full.template.substitute(
+      starterid = genId(),
       allEntities = string.join(chunkStrs, ","),
       allTiles = self.getTilesStr()
     )

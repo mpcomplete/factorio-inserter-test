@@ -1,10 +1,39 @@
 {
     "blueprint": {
         "entities": [
-          $allEntities
+            {
+                "control_behavior": {
+                    "filters": [
+                        {
+                            "count": 1, 
+                            "index": 1, 
+                            "signal": {
+                                "type": "virtual", 
+                                "name": "signal-R"
+                            }
+                        }, 
+                        {
+                            "count": 2000, 
+                            "index": 6, 
+                            "signal": {
+                                "type": "virtual", 
+                                "name": "signal-Z"
+                            }
+                        }
+                    ]
+                }, 
+                "position": {
+                    "y": -2, 
+                    "x": 0
+                }, 
+                "entity_number": $starterid,
+                "direction": 2, 
+                "name": "constant-combinator"
+            },
+            $allEntities
         ], 
         "tiles": [
-          $allTiles
+            $allTiles
         ], 
         "version": 68722819072, 
         "item": "blueprint", 

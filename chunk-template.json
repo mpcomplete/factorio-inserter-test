@@ -206,7 +206,7 @@
             {
                 "request_filters": [
                     {
-                        "count": 100, 
+                        "count": 10000, 
                         "index": 1, 
                         "name": "plastic-bar"
                     }
