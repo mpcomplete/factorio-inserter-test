@@ -36,16 +36,33 @@ def analyzeFile(f):
   # Normalize top left to (0,0).
   results = [(r[0] - ymin, r[1] - xmin, r[2]) for r in results]
 
-  # Convert y,x to row,col
+  # Convert y,x to row,col and make a map of it.
   width = 8
   height = 10
-  results = [(r[0]/height, r[1]/width, r[2]) for r in results]
-  return (offsetX, offsetY, results)
+  resultMap = {(r[0]/height, r[1]/width): r[2] for r in results}
+  return (offsetX, offsetY, resultMap)
 
-resultSets = []
+def findFastest(resultSets):
+  bests = {}
+  for pos, time in resultSets[0][2].items():
+    best = resultSets[0]
+    for results in resultSets[1:]:
+      if results[2][pos] < best[2][pos]:
+        best = results
+    bests[pos] = (best[0], best[1], best[2][pos])
 
-for each in sys.argv[1:]:
-  with open(each, "r") as f:
-    results = analyzeFile(f)
-    resultSets.append(results)
-    print(each, results[0:2])
+  return bests
+
+def main():
+  resultSets = []
+  for each in sys.argv[1:]:
+    with open(each, "r") as f:
+      results = analyzeFile(f)
+      resultSets.append(results)
+      print(each, results[0:2])
+
+  bests = findFastest(resultSets)
+  print(bests)
+
+if __name__ == "__main__":
+  main()
