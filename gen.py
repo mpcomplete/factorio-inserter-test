@@ -156,25 +156,25 @@ class Full:
   def genChunks(self):
     global dropOffset
 
-    row, col = 0, 0
-    for py in range(7):
-      for px in range(7):
-        for dy in range(7):
-          for dx in range(7):
-            row = py*7 + px
-            col = dy*7 + dx
-            chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
-            chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), getDropOffset(row, col))
-            if row > 0:
-              # Connect to above chunk
-              chunk.connectTo(self.chunks[(row-1)*7*7 + col])
-            if row == 0 and col > 0:
-              # Connect to left chunk
-              chunk.connectTo(self.chunks[row*7*7 + col-1])
+    chunkMap = {}
+    for row in range(7*7):
+      chunkMap[row] = {}
+      for col in range(7*7):
+        py = row / 7
+        px = row % 7
+        dy = col / 7
+        dx = col % 7
+        chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
+        chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), getDropOffset(row, col))
+        if row > 0:
+          # Connect to above chunk
+          chunk.connectTo(chunkMap[row-1][col])
+        if row == 0 and col > 0:
+          # Connect to left chunk
+          chunk.connectTo(chunkMap[row][col-1])
 
-            self.chunks.append(chunk)
-            col += 1
-      row += 1
+        chunkMap[row][col] = chunk
+    self.chunks = [chunk for chunkRow in chunkMap.values() for chunk in chunkRow.values()]
 
   def genAllFasterThan(self):
     global fasterThanNResults
@@ -285,8 +285,8 @@ def main():
     sys.stderr.write("Using offset=%d,%d\n" % (dropOffset.x, dropOffset.y))
 
   f = Full()
-#  f.genChunks()
-  f.genAllFasterThan()
+  f.genChunks()
+#  f.genAllFasterThan()
   print(f.substitute())
 
 if __name__ == "__main__":
