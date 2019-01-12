@@ -6,7 +6,7 @@ import base64
 import json
 
 bpString = sys.stdin.read()
-compressedBP = base64.b64decode(bpString[1:])
-bpJson = zlib.decompress(compressedBP)
-bp = json.loads(bpJson)
-print(json.dumps(bp, indent=4))
+bpCompressed = base64.b64decode(bpString[1:])
+bpJsonStr = zlib.decompress(bpCompressed)
+bpJson = json.loads(bpJsonStr)
+print(json.dumps(bpJson, indent=4))
