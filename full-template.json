@@ -1,0 +1,21 @@
+{
+    "blueprint": {
+        "entities": [
+          $allEntities
+        ], 
+        "tiles": [
+          $allTiles
+        ], 
+        "version": 68722819072, 
+        "item": "blueprint", 
+        "icons": [
+            {
+                "index": 1, 
+                "signal": {
+                    "type": "item", 
+                    "name": "decider-combinator"
+                }
+            }
+        ]
+    }
+}

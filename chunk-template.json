@@ -1,0 +1,192 @@
+            {
+                "connections": {
+                    "1": {
+                        "green": [
+                            {
+                                "circuit_id": 2, 
+                                "entity_id": $c2id
+                            }
+                        ]
+                    }
+                }, 
+                "position": {
+                    $epos
+                }, 
+                "entity_number": $eid, 
+                "name": "medium-electric-pole-4"
+            }, 
+            {
+                "entity_number": $c1id, 
+                "name": "decider-combinator", 
+                "direction": 2, 
+                "connections": {
+                    "1": {
+                        "green": [
+                            {
+                                "circuit_id": 1, 
+                                "entity_id": $c2id
+                            }, 
+                            {
+                                "entity_id": $iid
+                            }
+                        ], 
+                        "red": [
+                            {
+                                "entity_id": $did
+                            }
+                        ]
+                    }, 
+                    "2": {
+                        "red": [
+                            {
+                                "circuit_id": 1, 
+                                "entity_id": $c2id
+                            }
+                        ]
+                    }
+                }, 
+                "control_behavior": {
+                    "decider_conditions": {
+                        "second_signal": {
+                            "type": "virtual", 
+                            "name": "signal-Z"
+                        }, 
+                        "copy_count_from_input": false, 
+                        "first_signal": {
+                            "type": "virtual", 
+                            "name": "signal-everything"
+                        }, 
+                        "comparator": "<", 
+                        "output_signal": {
+                            "type": "virtual", 
+                            "name": "signal-T"
+                        }
+                    }
+                }, 
+                "position": {
+                    $c1pos
+                }
+            }, 
+            {
+                "entity_number": $c2id, 
+                "name": "decider-combinator", 
+                "direction": 2, 
+                "connections": {
+                    "1": {
+                        "green": [
+                            {
+                                "circuit_id": 1, 
+                                "entity_id": $c1id
+                            }
+                        ], 
+                        "red": [
+                            {
+                                "circuit_id": 2, 
+                                "entity_id": $c2id
+                            }, 
+                            {
+                                "circuit_id": 2, 
+                                "entity_id": $c1id
+                            }
+                        ]
+                    }, 
+                    "2": {
+                        "green": [
+                            {
+                                "entity_id": $eid
+                            }
+                        ],
+                        "red": [
+                            {
+                                "circuit_id": 1, 
+                                "entity_id": $c2id
+                            }
+                        ]
+                    }
+                }, 
+                "control_behavior": {
+                    "decider_conditions": {
+                        "copy_count_from_input": true, 
+                        "constant": 0, 
+                        "first_signal": {
+                            "type": "virtual", 
+                            "name": "signal-R"
+                        }, 
+                        "comparator": "\u2260", 
+                        "output_signal": {
+                            "type": "virtual", 
+                            "name": "signal-T"
+                        }
+                    }
+                }, 
+                "position": {
+                    $c2pos
+                }
+            }, 
+            {
+                "entity_number": $iid, 
+                "name": "express-stack-inserter", 
+                "direction": 4, 
+                "connections": {
+                    "1": {
+                        "green": [
+                            {
+                                "circuit_id": 1, 
+                                "entity_id": $c1id
+                            }
+                        ]
+                    }
+                }, 
+                "pickup_position": {
+                    $ipickup
+                }, 
+                "drop_position": {
+                    $idrop
+                }, 
+                "control_behavior": {
+                    "circuit_condition": {
+                        "constant": 0, 
+                        "first_signal": {
+                            "type": "virtual", 
+                            "name": "signal-R"
+                        }, 
+                        "comparator": ">"
+                    }
+                }, 
+                "position": {
+                    $ipos
+                }
+            }, 
+            {
+                "connections": {
+                    "1": {
+                        "red": [
+                            {
+                                "circuit_id": 1, 
+                                "entity_id": $c1id
+                            }
+                        ]
+                    }
+                }, 
+                "position": {
+                    $dpos
+                }, 
+                "entity_number": $did, 
+                "bar": 20, 
+                "name": "logistic-chest-active-provider"
+            }, 
+            {
+                "request_filters": [
+                    {
+                        "count": 100, 
+                        "index": 1, 
+                        "name": "plastic-bar"
+                    }
+                ], 
+                "position": {
+                    $ppos
+                }, 
+                "entity_number": $pid, 
+                "name": "creative-mode-fix_autofill-requester-chest"
+            }
+
