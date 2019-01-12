@@ -83,12 +83,12 @@ class Chunk:
     if len(self.connectedChunks) == 0:
       return ""
 
-    connectionTemplate = string.Template("""
+    template = string.Template("""
                             {
                                 "circuit_id": 1,
                                 "entity_id": $id
                             }""")
-    connections = [connectionTemplate.substitute(id = c.c1.id) for c in self.connectedChunks]
+    connections = [template.substitute(id = chunk.c1.id) for chunk in self.connectedChunks]
     return ",\n" + string.join(connections, ",")
 
 
@@ -117,7 +117,7 @@ class Full:
         self.chunks.append(chunk)
 
   def getTilesStr(self):
-    tileTemplate = string.Template("""
+    template = string.Template("""
             {
                 "position": {
                     "y": $y, 
@@ -129,7 +129,7 @@ class Full:
     for chunk in self.chunks:
       for y in range(Chunk.height):
         for x in range(Chunk.width):
-          tiles.append(tileTemplate.substitute(
+          tiles.append(template.substitute(
             x = x + chunk.pos.x,
             y = y + chunk.pos.y,
             kind = "hazard-concrete-left" if y < 2 else "concrete" 
@@ -137,9 +137,7 @@ class Full:
     return string.join(tiles, ",")
 
   def substitute(self):
-    chunkStrs = []
-    for chunk in self.chunks:
-      chunkStrs.append(chunk.substitute())
+    chunkStrs = [chunk.substitute() for chunk in self.chunks]
     return Full.template.substitute(
       allEntities = string.join(chunkStrs, ","),
       allTiles = self.getTilesStr()
