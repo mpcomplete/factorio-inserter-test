@@ -61,6 +61,7 @@ class Chunk:
       ppos = self.p.pos.toStr(),
       did = self.d.id,
       dpos = self.d.pos.toStr(),
+      chunkConnections = self._getChunkConnectionsStr()
     )
 
   def moveChests(self, pickupPos, dropPos, dropOffset):
@@ -78,6 +79,18 @@ class Chunk:
   def _getDrop(self):
     return self.d.pos - self.i.pos + self.dropOffset
 
+  def _getChunkConnectionsStr(self):
+    if len(self.connectedChunks) == 0:
+      return ""
+
+    connectionTemplate = string.Template("""
+                            {
+                                "circuit_id": 1,
+                                "entity_id": $id
+                            }""")
+    connections = [connectionTemplate.substitute(id = c.c1.id) for c in self.connectedChunks]
+    return ",\n" + string.join(connections, ",")
+
 
 def calcDropOffset(x, y):
   """x, y range [-1, 1]."""
@@ -90,16 +103,16 @@ class Full:
     self.chunks = []
 
   def genChunks(self):
-    for i in range(3):
-      for j in range(3):
+    for i in range(3): # y
+      for j in range(3): # x
         chunk = Chunk(i * (Chunk.width+1), j * (Chunk.height+1))
         chunk.moveChests(Point(2,2), Point(3,3), calcDropOffset(i-1, j-1))
-        if j == 0 && i > 0:
-          # Connect to above chunk
-          chunk.connectTo(chunks[(i-1)*Chunk.Width + j])
         if j > 0:
+          # Connect to above chunk
+          chunk.connectTo(self.chunks[i*3 + j-1])
+        if j == 0 and i > 0:
           # Connect to left chunk
-          chunk.connectTo(chunks[i*Chunk.Width + j-1])
+          chunk.connectTo(self.chunks[(i-1)*3 + j])
 
         self.chunks.append(chunk)
 

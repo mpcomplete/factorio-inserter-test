@@ -29,6 +29,7 @@
                             {
                                 "entity_id": $iid
                             }
+                            $chunkConnections
                         ], 
                         "red": [
                             {
