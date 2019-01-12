@@ -6,6 +6,11 @@ import zlib
 import base64
 import json
 
+class Object(dict):
+  def __init__(self,**kw):
+    dict.__init__(self,kw)
+    self.__dict__.update(kw)
+
 def analyzeFile(f):
   bpString = f.read()
   bpCompressed = base64.b64decode(bpString[1:])
@@ -40,29 +45,48 @@ def analyzeFile(f):
   width = 8
   height = 10
   resultMap = {(r[0]/height, r[1]/width): r[2] for r in results}
-  return (offsetX, offsetY, resultMap)
+  return Object(offset = (offsetX, offsetY), posToTimeMap = resultMap)
+
+def analyzeFiles(files):
+  resultSets = []
+  for each in files:
+    with open(each, "r") as f:
+      results = analyzeFile(f)
+      resultSets.append(results)
+  return resultSets
 
 def findFastest(resultSets):
   bests = {}
-  for pos, time in resultSets[0][2].items():
+  for pos, time in resultSets[0].posToTimeMap.items():
     best = resultSets[0]
     for results in resultSets[1:]:
-      if results[2][pos] < best[2][pos]:
+      if pos not in results.posToTimeMap:
+        # Indicates an invalid chunk (pickup/dropoff/inserters overlap).
+        # Older results have invalid chunks, newer do not.
+        best = None
+        break
+      if results.posToTimeMap[pos] < best.posToTimeMap[pos]:
         best = results
-    bests[pos] = (best[0], best[1], best[2][pos])
+    if best != None:
+      bests[pos] = Object(offset = best.offset, time = best.posToTimeMap[pos])
 
   return bests
 
 def main():
-  resultSets = []
-  for each in sys.argv[1:]:
-    with open(each, "r") as f:
-      results = analyzeFile(f)
-      resultSets.append(results)
-      print(each, results[0:2])
-
+  sys.stderr.write("Analyzing files: %s\n" % sys.argv[1:])
+  resultSets = analyzeFiles(sys.argv[1:])
   bests = findFastest(resultSets)
-  print(bests)
+  sys.stderr.write("Results gathered for these offsets: %s\n" % sorted(set([(b.offset[0], b.offset[1]) for b in bests.values()])))
+  sys.stderr.write("Fastest time was: %s\n" % min(bests.values(), key = lambda b: b.time))
 
+  with open("results/analyzed.json", "w") as f:
+    jsonObj = {'results': []}
+    for results in resultSets:
+      jsonObj['results'].append({
+        'offset': {'x': results.offset[0], 'y': results.offset[1]},
+        'posToTimeMap':  {('%s,%s' % (r[0][0], r[0][1])): r[1] for r in results.posToTimeMap.items()}
+      })
+    json.dump(jsonObj, f, indent=2)
+ 
 if __name__ == "__main__":
   main()

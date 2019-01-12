@@ -1,7 +1,17 @@
 #!/usr/bin/env python
+# Generates a blueprint with inserter timer circuits.
+# Usage:
+#   ./gen.py <drop-offset-x> <drop-offset-y>     OR
+#   ./gen.py
+# The former will use drop offsets you specify. The latter will use the
+# fastest drop offset for each inserter, using previously gathered data
+# from the results/ dir.
 
 import sys
 import string
+import os
+import json
+from analyze import Object
 
 nextId = 0
 def genId():
@@ -24,6 +34,8 @@ class Point:
     return self.x == other.x and self.y == other.y
   def __ne__(self, other):
     return not (self == other)
+  def __hash__(self):
+    return hash((self.x, self.y))
 
 
 class Entity:
@@ -123,10 +135,18 @@ class Chunk:
     return True
 
 
-def calcDropOffset(x, y):
+def calcDropOffset(p):
   """x, y range [-1, 1]."""
-  return Point(x*.2, y*.2)
+  return Point(p.x*.2, p.y*.2)
 
+def getDropOffset(row, col):
+  global dropOffset
+  global fastestOffsetForPos
+
+  key =  '%s,%s' % (row, col)
+  if fastestOffsetForPos != None and key in fastestOffsetForPos:
+    return calcDropOffset(fastestOffsetForPos[key].offset)
+  return calcDropOffset(dropOffset)
 
 class Full:
   """All the chunks together."""
@@ -144,7 +164,7 @@ class Full:
             row = py*7 + px
             col = dy*7 + dx
             chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
-            chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), calcDropOffset(dropOffset.x, dropOffset.y))
+            chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), getDropOffset(row, col))
             if row > 0:
               # Connect to above chunk
               chunk.connectTo(self.chunks[(row-1)*7*7 + col])
@@ -155,6 +175,34 @@ class Full:
             self.chunks.append(chunk)
             col += 1
       row += 1
+
+  def genAllFasterThan(self):
+    global fasterThanNResults
+    row, col = 0, 0
+    chunkMap = {0: {}}
+    for each in fasterThanNResults:
+      resultRow, resultCol = each.pos[0], each.pos[1]
+      py = resultRow / 7
+      px = resultRow % 7
+      dy = resultCol / 7
+      dx = resultCol % 7
+
+      chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
+      chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), calcDropOffset(each.offset))
+      if row > 0:
+        # Connect to above chunk
+        chunk.connectTo(chunkMap[row-1][col])
+      if row == 0 and col > 0:
+        # Connect to left chunk
+        chunk.connectTo(chunkMap[row][col-1])
+
+      chunkMap[row][col] = chunk
+      col += 1
+      if col > 7*7:
+        col = 0
+        row += 1
+        chunkMap[row] = {}
+    self.chunks = [chunk for chunkRow in chunkMap.values() for chunk in chunkRow.values()]
 
   def getTilesStr(self):
     template = string.Template("""
@@ -191,11 +239,55 @@ with open("chunk-empty-template.json", "r") as f:
 with open("full-template.json", "r") as f:
   Full.template = string.Template(f.read())
 
-dropOffset = Point(int(sys.argv[1]), int(sys.argv[2]))
-assert(-1 <= dropOffset.x <= 1)
-assert(-1 <= dropOffset.y <= 1)
-sys.stderr.write("Using offset=%d,%d\n" % (dropOffset.x, dropOffset.y))
+def findFastestForPos(resultSets):
+  bests = {}
+  for pos, time in resultSets[0]['posToTimeMap'].items():
+    best = resultSets[0]
+    for results in resultSets[1:]:
+      if pos not in results['posToTimeMap']:
+        # Indicates an invalid chunk (pickup/dropoff/inserters overlap).
+        # Older results have invalid chunks, newer do not.
+        best = None
+        break
+      if results['posToTimeMap'][pos] < best['posToTimeMap'][pos]:
+        best = results
+    if best != None:
+      bests[pos] = Object(offset = Point(best['offset']['x'], best['offset']['y']), time = best['posToTimeMap'][pos])
 
-f = Full()
-f.genChunks()
-print(f.substitute())
+  return bests
+
+def findAllFasterThan(resultSets, maxTime):
+  matches = []
+  for results in resultSets:
+    for pos, time in results['posToTimeMap'].items():
+      if int(time) < maxTime:
+        row, col = [t(s) for t,s in zip((int,int), pos.split(','))]
+        matches.append(Object(offset = Point(results['offset']['x'], results['offset']['y']), pos = (row, col)))
+  return matches
+
+def main():
+  global dropOffset
+  global fastestOffsetForPos
+  global fasterThanNResults
+
+  if len(sys.argv) == 1:
+    with open("results/analyzed.json") as f:
+      resultSets = json.load(f)
+    fastestOffsetForPos = findFastestForPos(resultSets['results'])
+    fasterThanNResults = findAllFasterThan(resultSets['results'], 300)
+    dropOffset = Point(0, 0) # for invalid chunks
+    sys.stderr.write("Using best offsets as indicated by results data\n")
+    sys.stderr.write("Found %d results faster than 500\n" % len(fasterThanNResults))
+  else:
+    dropOffset = Point(int(sys.argv[1]), int(sys.argv[2]))
+    assert(-1 <= dropOffset.x <= 1)
+    assert(-1 <= dropOffset.y <= 1)
+    sys.stderr.write("Using offset=%d,%d\n" % (dropOffset.x, dropOffset.y))
+
+  f = Full()
+#  f.genChunks()
+  f.genAllFasterThan()
+  print(f.substitute())
+
+if __name__ == "__main__":
+  main()
