@@ -36,6 +36,7 @@ class Chunk:
 
   def __init__(self, x, y):
     self.pos = Point(x, y)
+    self.n = Entity(x + 5, y + 0)
     self.e = Entity(x + 6, y + 0)
     self.c1 = Entity(x + 0.5, y + 1)
     self.c2 = Entity(x + 5.5, y + 1)
@@ -47,6 +48,9 @@ class Chunk:
 
   def substitute(self):
     return Chunk.template.substitute(
+      nixieLeading = self._getNixieStr(),
+      nid = self.n.id,
+      npos = self.n.pos.toStr(),
       eid = self.e.id,
       epos = self.e.pos.toStr(),
       c1id = self.c1.id,
@@ -79,6 +83,19 @@ class Chunk:
   def _getDrop(self):
     return self.d.pos - self.i.pos + self.dropOffset
 
+  def _getNixieStr(self):
+    template = string.Template("""
+            {
+                "position": {
+                    "y": $y, 
+                    "x": $x
+                }, 
+                "entity_number": $id, 
+                "name": "SNTD-nixie-tube-small"
+            }""")
+    nixies = [template.substitute(x = self.pos.x + x, y = self.pos.y + 0, id = genId()) for x in range(5)]
+    return string.join(nixies, ",")
+
   def _getChunkConnectionsStr(self):
     if len(self.connectedChunks) == 0:
       return ""
@@ -103,18 +120,25 @@ class Full:
     self.chunks = []
 
   def genChunks(self):
-    for i in range(3): # y
-      for j in range(3): # x
-        chunk = Chunk(i * (Chunk.width+1), j * (Chunk.height+1))
-        chunk.moveChests(Point(2,2), Point(3,3), calcDropOffset(i-1, j-1))
-        if j > 0:
-          # Connect to above chunk
-          chunk.connectTo(self.chunks[i*3 + j-1])
-        if j == 0 and i > 0:
-          # Connect to left chunk
-          chunk.connectTo(self.chunks[(i-1)*3 + j])
+    row, col = 0, 0
+    for py in range(7):
+      for px in range(7):
+        for dy in range(7):
+          for dx in range(7):
+            row = py*7 + px
+            col = dy*7 + dx
+            chunk = Chunk(col * (Chunk.width+1), row * (Chunk.height+1))
+            chunk.moveChests(Point(px-3, py-3), Point(dx-3,dy-3), calcDropOffset(0, 0))
+            if row > 0:
+              # Connect to above chunk
+              chunk.connectTo(self.chunks[(row-1)*7*7 + col])
+            if row == 0 and col > 0:
+              # Connect to left chunk
+              chunk.connectTo(self.chunks[row*7*7 + col-1])
 
-        self.chunks.append(chunk)
+            self.chunks.append(chunk)
+            col += 1
+      row += 1
 
   def getTilesStr(self):
     template = string.Template("""

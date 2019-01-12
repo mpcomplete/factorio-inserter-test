@@ -1,3 +1,30 @@
+            $nixieLeading,
+            {
+                "control_behavior": {
+                    "circuit_condition": {
+                        "constant": 0, 
+                        "first_signal": {
+                            "type": "virtual", 
+                            "name": "signal-T"
+                        }, 
+                        "comparator": "="
+                    }
+                }, 
+                "position": {
+                    $npos
+                }, 
+                "entity_number": $nid, 
+                "name": "SNTD-nixie-tube-small", 
+                "connections": {
+                    "1": {
+                        "green": [
+                            {
+                                "entity_id": $eid
+                            }
+                        ]
+                    }
+                }
+            },
             {
                 "connections": {
                     "1": {
