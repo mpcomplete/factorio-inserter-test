@@ -2,10 +2,12 @@
 # Generates a blueprint with inserter timer circuits.
 # Usage:
 #   ./gen.py <drop-offset-x> <drop-offset-y>     OR
+#   ./gen.py <max-time>                          OR
 #   ./gen.py
-# The former will use drop offsets you specify. The latter will use the
-# fastest drop offset for each inserter, using previously gathered data
-# from the results/ dir.
+# Version 1 will use drop offsets you specify. Version 2 will generate
+# every that transferred 2000 items faster than the given time (171 is
+# the fastest I measured). Version 3 will use the fastest drop offset
+# for each inserter, using previously gathered data from the results/ dir.
 
 import sys
 import string
