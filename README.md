@@ -13,7 +13,7 @@ Difficult to test that many configurations by hand. Enter automation!
 
 # Method
 
-I wrote a python script to create a 49x49 grid of inserters with an
+I wrote a [python script](gen.py) to create a 49x49 grid of inserters with an
 accompanying timing circuit. Each inserter has a specific pickup and dropoff
 location, according to its position in the grid. All inserters have the same
 offset. I then ran this 9 times to get a version for each offset, and tested
@@ -44,7 +44,7 @@ results.
 
 I've included two blueprints with the best inserters.
 
-1. [This blueprint](testOffsetPerPos.bp) has a grid of inserters for every
+1. [This blueprint](fastestOffsetPerPos.bp) has a grid of inserters for every
 possible pickup and dropoff configuration, with the fastest offset for that
 configuration. (Note than many configurations have multiple offsets that are
 equally fast. The blueprint includes only one offset per configuration, chosen
