@@ -10,3 +10,40 @@ offset from a 3x3 grid, which is like a 20% nudge in the given direction.
 Altogether, that's 7x7x7x7x9 for a grand total of 21,609.
 
 Difficult to test that many configurations by hand. Enter automation!
+
+# Method
+
+I wrote gen.py to create a 49x49 grid of inserters with an accompanying timing
+circuit. Each inserter has a specific pickup and dropoff location, according to
+its position in the grid. All inserters have the same offset. I then ran this 9
+times to get a version for each offset, and tested those 9 versions separately.
+It looks like this.
+
+[The grid](inserters.png)
+
+You can test a blueprint yourself by applying power, then connecting a green
+with from the constant combinator at the top left to the input of the leftmost
+decider combinator. You'll need the Nixie Tubes mod for the timing display,
+Bob's Logistics for the chests, and (obviously) Bob's adjustable inserters for
+the inserters.
+
+The raw results are in the results/ directory. Each result is a blueprint
+containing the timing data for all configurations with a given offset.
+
+# Observations
+
+Much of this was already known, but here are some general observations of the
+results.
+
+- Smaller angles are faster.
+- Longer arms can achieve smaller angles, and therefore are faster.
+- Changing the arm length from pickup to dropoff slows down the cycle time significantly.
+- The offset can affect the arm length, and therefore, the cycle time.
+
+# Results
+
+I've included two blueprints with the best inserters.
+[This blueprint](testOffsetPerPos.bp) has a grid of inserters for every
+possible pickup and dropoff configuration, with the fastest offset for that
+configuration. [This one](fasterThan300.bp) has only the very fastest inserters
+(ones that transfer 2000 items faster than 300 ticks on my machine).
