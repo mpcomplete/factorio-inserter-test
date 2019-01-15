@@ -13,11 +13,11 @@ Difficult to test that many configurations by hand. Enter automation!
 
 # Method
 
-I wrote gen.py to create a 49x49 grid of inserters with an accompanying timing
-circuit. Each inserter has a specific pickup and dropoff location, according to
-its position in the grid. All inserters have the same offset. I then ran this 9
-times to get a version for each offset, and tested those 9 versions separately.
-It looks like this.
+I wrote a python script to create a 49x49 grid of inserters with an
+accompanying timing circuit. Each inserter has a specific pickup and dropoff
+location, according to its position in the grid. All inserters have the same
+offset. I then ran this 9 times to get a version for each offset, and tested
+those 9 versions separately. It looks like this.
 
 ![The grid](inserters.png)
 
@@ -43,7 +43,17 @@ results.
 # Results
 
 I've included two blueprints with the best inserters.
-[This blueprint](testOffsetPerPos.bp) has a grid of inserters for every
+
+1. [This blueprint](testOffsetPerPos.bp) has a grid of inserters for every
 possible pickup and dropoff configuration, with the fastest offset for that
-configuration. [This one](fasterThan300.bp) has only the very fastest inserters
+configuration. (Note than many configurations have multiple offsets that are
+equally fast. The blueprint includes only one offset per configuration, chosen
+arbitrarily from the best.)
+
+2. [This one](fasterThan300.bp) has only the very fastest inserters
 (ones that transfer 2000 items faster than 300 ticks on my machine).
+
+I also attempted to find a correlation between (swing angle, arm length) and
+cycle time. That attempt is in the [angleAnalyze](angleAnalyze.py) script. I
+couldn't get good results out of it, so I gave up. Maybe someone else can
+figure it out.
