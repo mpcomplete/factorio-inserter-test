@@ -19,7 +19,7 @@ its position in the grid. All inserters have the same offset. I then ran this 9
 times to get a version for each offset, and tested those 9 versions separately.
 It looks like this.
 
-[The grid](inserters.png)
+![The grid](inserters.png)
 
 You can test a blueprint yourself by applying power, then connecting a green
 with from the constant combinator at the top left to the input of the leftmost
