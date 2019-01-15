@@ -8,6 +8,9 @@
 # every that transferred 2000 items faster than the given time (171 is
 # the fastest I measured). Option 3 will use the fastest drop offset
 # for each inserter, using previously gathered data from the results/ dir.
+#
+# Use pack.py to convert the output to a blueprint string, e.g:
+#   ./gen.py | ./pack.py | clip
 
 import sys
 import string
