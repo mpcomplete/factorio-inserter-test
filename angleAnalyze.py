@@ -39,10 +39,55 @@ def getAngleVsTime(results):
   avt.sort(key = lambda each: (each.len, each.angle))
   return avt
 
+def rotateCW(v):
+  return Point(-v.y, v.x)
+
+def findMatching(candidates, row, col, offset):
+  for c in candidates:
+    if c.row == row and c.col == col and c.offset == offset:
+      return c
+  return None
+
+def findMatchingTime(candidates, row, col, offset, time):
+  for c in candidates:
+    if c.row == row and c.col == col and c.time == time and c.offset != offset:
+      return c
+  return None
+
+def checkSymmetry(candidates, c):
+  """Check that each configuration has a matching rotation with the same speed. Turns out this is not the case."""
+  cent = Point(3, 3)
+  p = Point(c.row / 7, c.row % 7) - cent
+  d = Point(c.col / 7, c.col  % 7) - cent
+  o = calcDropOffset(c.offset)
+  op = p
+  od = d
+  oo = o
+  if dist(p) == 0 or dist(d) == 0:
+    return
+  for i in range(3):
+    p = rotateCW(p)
+    d = rotateCW(d)
+    o = rotateCW(o)
+    row = int(round((p.x+3)*7 + (p.y+3)))
+    col = int(round((d.x+3)*7 + (d.y+3)))
+    offset = Point(o.x*5, o.y*5)
+
+    tp = Point(row / 7, row % 7) - cent
+    td = Point(col / 7, col  % 7) - cent
+    rc = findMatchingTime(candidates, row, col, c.offset, c.time)
+    if rc is None:
+      print("rotated inserter has no match; orig=%s, %s, %s; rotated=%s, %s, %s" %
+            (op, od, oo, p, d, o))
+
 def main():
   with open("results/analyzed.json") as fp:
     resultSets = json.load(fp)
   matches = findAllFasterThan(resultSets['results'], 1000000)
+  for c in matches:
+    checkSymmetry(matches, c)
+  return
+
   avt = getAngleVsTime(matches)
   for each in avt:
     if each.time == 0:
