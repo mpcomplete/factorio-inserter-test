@@ -4,9 +4,9 @@
 #   ./gen.py <drop-offset-x> <drop-offset-y>     OR
 #   ./gen.py <max-time>                          OR
 #   ./gen.py
-# Version 1 will use drop offsets you specify. Version 2 will generate
+# Option 1 will use drop offsets you specify. Option 2 will generate
 # every that transferred 2000 items faster than the given time (171 is
-# the fastest I measured). Version 3 will use the fastest drop offset
+# the fastest I measured). Option 3 will use the fastest drop offset
 # for each inserter, using previously gathered data from the results/ dir.
 
 import sys
@@ -248,7 +248,7 @@ def findAllFasterThan(resultSets, maxTime):
     for pos, time in results['posToTimeMap'].items():
       if int(time) < maxTime:
         row, col = [t(s) for t,s in zip((int,int), pos.split(','))]
-        matches.append(Object(offset = Point(results['offset']['x'], results['offset']['y']), row = row, col = col))
+        matches.append(Object(offset = Point(results['offset']['x'], results['offset']['y']), row = row, col = col, time = int(time)))
   return matches
 
 def calcDropOffset(p):
